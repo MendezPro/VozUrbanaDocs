@@ -1,0 +1,20 @@
+# Coloca aquí, una por línea, las rutas relativas (desde la raíz del repo) de los 18 archivos a convertir.
+# Líneas que empiezan con # se ignoran.
+docs/conversion-setup/1_Guia_Carta_Inicio_Proyecto_TI.docx
+docs/conversion-setup/2_RFyRNFVozUrbana.docx
+docs/conversion-setup/3_Matriz_RyR_VozUrbana.docx
+docs/conversion-setup/4_Definición del Alcance.docx
+docs/conversion-setup/5_Tiempos.docx
+docs/conversion-setup/6_Costos.docx
+docs/conversion-setup/7_Comunicación.docx
+docs/conversion-setup/8_Selección_herramienta_comunicación.docx
+docs/conversion-setup/9_Selección_herramienta_gestión_proyectos_TI.docx
+docs/conversion-setup/10_Matriz_Control_Riesgos.docx
+docs/conversion-setup/11_Plan_comunicación_seguimiento.docx
+docs/conversion-setup/12_minuta.docx
+docs/Distribucion de equipos.pdf
+docs/Ejemplo_Matriz_RACI_Proyecto_TI.docx
+docs/Ejemplo_Plan_Gestion_de_Riesgos.docx
+docs/Guia_Carta_Inicio_Proyecto_TI.docx
+docs/Plan_Gestion_de_Riesgos_Proyecto_TI.pdf
+docs/Practica_Matriz_Roles_Responsabilidades_TI.docx
