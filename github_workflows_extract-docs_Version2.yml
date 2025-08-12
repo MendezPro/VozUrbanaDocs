@@ -1,0 +1,87 @@
+name: Extract Office/PDF to Markdown
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode: all or list"
+        required: false
+        default: "list"
+      filelist_path:
+        description: "Path to text file with one file path per line (used when mode=list)"
+        required: false
+        default: "docs/_filelist.txt"
+  push:
+    paths:
+      - "**/*.docx"
+      - "**/*.pdf"
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true  # Si usas Git LFS para .docx/.pdf, esto baja los binarios reales
+
+      - name: Install converters (pandoc, poppler-utils)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc poppler-utils
+
+      - name: Build conversion list
+        id: build_list
+        shell: bash
+        run: |
+          set -euo pipefail
+          MODE="${{ github.event.inputs.mode || 'list' }}"
+          FILELIST="${{ github.event.inputs.filelist_path || 'docs/_filelist.txt' }}"
+          mkdir -p docs/_extracted
+          tmpfile="$(mktemp)"
+          if [[ "$MODE" == "list" && -f "$FILELIST" ]]; then
+            # Lee la lista provista por ti (ignora líneas vacías y comentarios)
+            grep -v '^\s*#' "$FILELIST" | sed '/^\s*$/d' > "$tmpfile"
+          else
+            # Descubre todos los .docx/.pdf versionados
+            git ls-files '*.docx' '*.pdf' > "$tmpfile" || true
+          fi
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          cat "$tmpfile" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Convert files to Markdown
+        if: steps.build_list.outputs.files != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
+            ext="${f##*.}"
+            out="docs/_extracted/${f%.*}.md"
+            mkdir -p "$(dirname "$out")"
+            echo "Converting: $f -> $out"
+            if [[ "$ext" == "docx" ]]; then
+              pandoc "$f" -t gfm -o "$out" --wrap=none
+            elif [[ "$ext" == "pdf" ]]; then
+              pdftotext -layout "$f" - | pandoc -f plain -t gfm -o "$out" --wrap=none
+            fi
+          done <<< "${{ steps.build_list.outputs.files }}"
+
+      - name: Commit extracted Markdown
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add docs/_extracted
+            git commit -m "chore(docs): extract text from Office/PDF [skip ci]"
+            git push
+          else
+            echo "No changes to commit."
+          fi
